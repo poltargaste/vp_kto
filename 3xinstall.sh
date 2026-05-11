@@ -206,6 +206,19 @@ systemctl daemon-reload >>"$LOG_FILE" 2>&1
 systemctl enable x-ui >>"$LOG_FILE" 2>&1
 systemctl start x-ui >>"$LOG_FILE" 2>&1
 
+# Ждём пока панель поднимется
+echo -e "${yellow}Ожидаем запуска панели...${plain}" >&3
+for i in {1..15}; do
+    sleep 2
+    if curl -s --max-time 2 "http://127.0.0.1:${PORT}/${WEBPATH}/login" | grep -q "html" 2>/dev/null; then
+        echo -e "${green}Панель готова.${plain}" >&3
+        break
+    fi
+    if [[ $i -eq 15 ]]; then
+        echo -e "${yellow}Панель долго стартует, продолжаем...${plain}" >&3
+    fi
+done
+
 # === Reality ключи ===
 KEYS=$(/usr/local/x-ui/bin/xray-linux-${ARCH} x25519)
 PRIVATE_KEY=$(echo "$KEYS" | grep -i "Private" | sed -E 's/.*Key:\s*//')
